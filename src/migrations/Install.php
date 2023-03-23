@@ -71,6 +71,8 @@ class Install extends Migration
         $tablesCreated = false;
 
         $tableSchema = Craft::$app->db->schema->getTableSchema('{{%isolate_permissions}}');
+       
+        $tableSchema_assets = Craft::$app->db->schema->getTableSchema('{{%isolate_permissions_assets}}');
 
         if ($tableSchema === null) {
             $tablesCreated = true;
@@ -85,6 +87,19 @@ class Install extends Migration
                 'uid' => $this->uid()
             ]);
         }
+		
+		if ($tableSchema_assets === null) {
+			$tablesCreated = true;
+			
+			$this->createTable('{{%isolate_permissions_assets}}', [
+				'id' => $this->primaryKey(),
+				'userId' => $this->integer()->notNull(),
+				'assetsId' => $this->integer()->notNull(),
+				'dateCreated' => $this->dateTime()->notNull(),
+				'dateUpdated' => $this->dateTime()->notNull(),
+				'uid' => $this->uid()
+			]);
+		}
 
         return $tablesCreated;
     }
@@ -109,5 +124,6 @@ class Install extends Migration
     protected function removeTables()
     {
         $this->dropTableIfExists('{{%isolate_permissions}}');
+        $this->dropTableIfExists('{{%isolate_permissions_assets}}');
     }
 }

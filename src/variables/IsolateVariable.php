@@ -52,4 +52,14 @@ class IsolateVariable
     {
         return Isolate::$plugin->isolateService->isStructure($sectionId);
     }
+	
+	public function modifyAssetRecords(int $userId, array $assetIds)
+	{
+		return Isolate::$plugin->isolateService->modifyAssetRecords($userId, $assetIds);
+	}
+	
+	public function getUserAssetIds(int $userId)
+	{
+		return Isolate::$plugin->isolateService->getUserAssetIds($userId);
+	}
 }

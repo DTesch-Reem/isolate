@@ -13,6 +13,7 @@ namespace trendyminds\isolate\services;
 use craft\models\Section;
 use craft\services\Sections;
 use craft\services\Structures;
+use trendyminds\isolate\records\IsolateAssetRecord;
 use trendyminds\isolate\records\IsolateRecord;
 
 use Craft;
@@ -394,4 +395,124 @@ class IsolateService extends Component
 
         return true;
     }
+	
+	/**
+	 * Modifies database record of an isolated user (adds/edit/removes)
+	 *
+	 * @param integer $userId
+	 * @param int[] $entries
+	 * @return void
+	 * @throws \Throwable
+	 * @throws \yii\db\StaleObjectException
+	 */
+	public function modifyAssetRecords(int $userId, array $assetIds)
+	{
+		/**
+		 * Remove entries that were de-selected
+		 */
+		$existingEntries = IsolateAssetRecord::findAll([
+			"userId" => $userId,
+		]);
+		
+		$existingEntries = array_map(function($permission) {
+			return $permission->assetsId;
+		}, $existingEntries);
+		
+		$entriesToRemove = array_values(array_diff($existingEntries, $assetIds));
+		
+		foreach ($entriesToRemove as $entryId)
+		{
+			$record = IsolateRecord::findOne([
+				"assetsId" => $entryId
+			]);
+			
+			$record->delete();
+		}
+		
+		/**
+		 * Add entries that are new selections
+		 */
+		$entriesToAdd = array_values(array_diff($assetIds, $existingEntries));
+		
+		foreach ($entriesToAdd as $entryId)
+		{
+			$record = new IsolateAssetRecord();
+			$record->setAttribute('userId', $userId);
+			$record->setAttribute('assetsId', $entryId);
+			$record->save();
+		}
+		
+		// Get the total number of entries a user now has access to
+		$totalEntries = (int) IsolateAssetRecord::find(["userId" => $userId])->count();
+		
+		/**
+		 * If a user has been assigned permissions, enable Isolate automatically to make the workflow contained in one place
+		 */
+		if ($totalEntries > 0) {
+			$usersPermissions = Craft::$app->userPermissions->getPermissionsByUserId($userId);
+			$usersPermissions[] = "accessplugin-isolate";
+			Craft::$app->userPermissions->saveUserPermissions($userId, $usersPermissions);
+		}
+		
+		/**
+		 * If a user has no assigned permissions disable their access to Isolate
+		 */
+		if ($totalEntries === 0) {
+			$usersPermissions = Craft::$app->userPermissions->getPermissionsByUserId($userId);
+			$usersPermissions = array_filter($usersPermissions, function($permission) {
+				return $permission !== "accessplugin-isolate";
+			});
+			Craft::$app->userPermissions->saveUserPermissions($userId, $usersPermissions);
+		}
+	}
+	
+	/**
+	 * Gets the IDs of every entry a user can edit
+	 * Can be scoped down to specific sections
+	 *
+	 * @param integer $userId
+	 * @return array
+	 */
+	public function getUserAssetIds(int $userId)
+	{
+		$isoQuery = new Query();
+		
+		// Get all of the records that a user has been explicitly isolated into
+		$isolatedRecords = $isoQuery->select(["iso.*"])
+		                            ->from("{{%isolate_permissions_assets}} iso")
+		                            ->where(["iso.userId" => $userId])
+		                            ->all();
+		
+		$isolatedSections = null;
+		$isolatedEntryIds = [];
+		
+		// If the user is isolated we need to get the sections they are isolated into and the IDs of the entries they are isolated into
+		if (count($isolatedRecords) > 0)
+		{
+			
+			$isolatedEntryIds = array_map(function($record) {
+				return $record['assetsId'];
+			}, $isolatedRecords);
+			
+		}
+		
+		$ids = [];
+		
+		$secQuery = new Query();
+		
+		// Find any sections the user has access to that are *not* part of their isolated sections
+		// We need to display all of these
+		$sectionEntries = $secQuery->select(["ent.id"])
+		                           ->from("{{%assets}} ent")
+		                           ->andFilterWhere(["not", ["ent.id" => $isolatedEntryIds]])
+		                           ->all();
+		foreach ($sectionEntries as $entry)
+		{
+			$ids[] = $entry['id'];
+		}
+		
+		$ids = array_merge($ids, $isolatedEntryIds);
+		
+		return $ids;
+	}
 }
