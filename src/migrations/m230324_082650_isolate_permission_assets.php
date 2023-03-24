@@ -10,6 +10,12 @@ use craft\db\Migration;
  */
 class m230324_082650_isolate_permission_assets extends Migration
 {
+	
+	/**
+	 * @var string The database driver to use
+	 */
+	public $driver;
+	
     /**
      * @inheritdoc
      */
