@@ -56,6 +56,20 @@ class m230324_082650_isolate_permission_assets extends Migration
 		
 		return $tablesCreated;
 	}
+	
+	/**
+	 * @return void
+	 */
+	protected function createIndexes()
+	{
+		// Additional commands depending on the db driver
+		switch ($this->driver) {
+			case DbConfig::DRIVER_MYSQL:
+				break;
+			case DbConfig::DRIVER_PGSQL:
+				break;
+		}
+	}
 
     /**
      * @inheritdoc
