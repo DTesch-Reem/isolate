@@ -275,6 +275,73 @@ class IsolateService extends Component
     }
 	
 	/**
+	 * Checks if a user can edit an asset give a path
+	 *
+	 * @param integer $userId
+	 * @param string $path
+	 * @param bool $redirect_to_dashboard
+	 * @return bool
+	 * @throws ForbiddenHttpException
+	 */
+	public function verifyIsolatedUserAssetAccess(int $userId, string $path, bool $redirect_to_dashboard = true)
+	{
+		$segments = Craft::$app->request->getSegments();
+		
+		// If a user is attempting to edit a specific entry (but not create a new one)
+		if (count($segments) && $segments[0] === "assets" && isset($segments[2]) && (!Craft::$app->request->getParam('fresh') && $segments[2] !== "new"))
+		{
+			// Get the ID of the entry a user is accessing
+			preg_match("/^\d*/", $segments[2], $matches);
+			
+			// Compare the ID to the list of IDs a user *can* access
+			$accessibleIds = $this->getUserAssetIds($userId);
+			$canAccess = in_array($matches[0], $accessibleIds);
+			
+			if (!$canAccess)
+			{
+				throw new ForbiddenHttpException('User is not permitted to perform this action');
+			}
+		}
+		
+		// Deny isolated user access to the entries area by redirecting back to dashboard
+		// Redirecting because saving an entry often takes a user back to the entries listing
+		if (count($segments) && $segments[0] === "assets" && !(isset($segments[2])) && $redirect_to_dashboard)
+		{
+			$url = "isolate";
+			
+			if (isset($segments[1])) {
+				$url = "isolate/dashboard/$segments[1]";
+			}
+			
+			header('Location: ' . UrlHelper::cpUrl($url));
+			
+			return;
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * Is the user isolated?
+	 *
+	 * @param integer $userId
+	 * @return boolean
+	 */
+	public function isUserAssetIsolated(int $userId)
+	{
+		// If this user is assigned an entry then this user is isolated
+		$userHasIsolateRecord = IsolateAssetRecord::findOne([
+			"userId" => $userId
+		]);
+		
+		if ($userHasIsolateRecord) {
+			return true;
+		}
+		
+		return false;
+	}
+	
+	/**
 	 * Gets the IDs of every entry a user can edit
 	 * Can be scoped down to specific sections
 	 *
@@ -422,7 +489,7 @@ class IsolateService extends Component
 		
 		foreach ($entriesToRemove as $entryId)
 		{
-			$record = IsolateRecord::findOne([
+			$record = IsolateAssetRecord::findOne([
 				"assetsId" => $entryId
 			]);
 			
@@ -483,10 +550,8 @@ class IsolateService extends Component
 		                            ->where(["iso.userId" => $userId])
 		                            ->all();
 		
-		$isolatedSections = null;
 		$isolatedEntryIds = [];
 		
-		// If the user is isolated we need to get the sections they are isolated into and the IDs of the entries they are isolated into
 		if (count($isolatedRecords) > 0)
 		{
 			
@@ -496,23 +561,6 @@ class IsolateService extends Component
 			
 		}
 		
-		$ids = [];
-		
-		$secQuery = new Query();
-		
-		// Find any sections the user has access to that are *not* part of their isolated sections
-		// We need to display all of these
-		$sectionEntries = $secQuery->select(["ent.id"])
-		                           ->from("{{%assets}} ent")
-		                           ->andFilterWhere(["not", ["ent.id" => $isolatedEntryIds]])
-		                           ->all();
-		foreach ($sectionEntries as $entry)
-		{
-			$ids[] = $entry['id'];
-		}
-		
-		$ids = array_merge($ids, $isolatedEntryIds);
-		
-		return $ids;
+		return $isolatedEntryIds;
 	}
 }

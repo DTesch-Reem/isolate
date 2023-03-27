@@ -33,17 +33,3 @@ class IsolateRecord extends ActiveRecord
         return '{{%isolate_permissions}}';
     }
 }
-
-class IsolateAssetRecord extends ActiveRecord
-{
-	// Public Static Methods
-	// =========================================================================
-	
-	/**
-	 * @inheritdoc
-	 */
-	public static function tableName()
-	{
-		return '{{%isolate_permissions_assets}}';
-	}
-}

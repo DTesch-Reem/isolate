@@ -73,11 +73,17 @@ class Isolate extends Plugin
             function (RegisterUrlRulesEvent $event) {
                 // Only apply assets if user is logged in
                 if (!Craft::$app->user->isGuest) {
-                    if (Isolate::$plugin->isolateService->isUserIsolated(Craft::$app->getUser()->id))
-                    {
-                        Craft::$app->getView()->registerAssetBundle(IsolateAsset::class);
-                        Isolate::$plugin->isolateService->verifyIsolatedUserAccess(Craft::$app->getUser()->id, Craft::$app->request->pathInfo, false);
-                    }
+	                if (Isolate::$plugin->isolateService->isUserIsolated(Craft::$app->getUser()->id))
+	                {
+		                Craft::$app->getView()->registerAssetBundle(IsolateAsset::class);
+		                Isolate::$plugin->isolateService->verifyIsolatedUserAccess(Craft::$app->getUser()->id, Craft::$app->request->pathInfo, false);
+	                }
+	
+	                if (Isolate::$plugin->isolateService->isUserAssetIsolated(Craft::$app->getUser()->id))
+	                {
+		                Craft::$app->getView()->registerAssetBundle(IsolateAsset::class);
+		                Isolate::$plugin->isolateService->verifyIsolatedUserAssetAccess(Craft::$app->getUser()->id, Craft::$app->request->pathInfo, false);
+	                }
                 }
 
                 $event->rules = array_merge($event->rules, [
