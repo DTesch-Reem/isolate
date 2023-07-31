@@ -517,7 +517,7 @@ class IsolateService extends Component
 		 */
 		if ($totalEntries > 0) {
 			$usersPermissions = Craft::$app->userPermissions->getPermissionsByUserId($userId);
-			$usersPermissions[] = "accessplugin-isolate";
+			$usersPermissions[] = "accessplugin-isolate-assets";
 			Craft::$app->userPermissions->saveUserPermissions($userId, $usersPermissions);
 		}
 		
@@ -527,7 +527,7 @@ class IsolateService extends Component
 		if ($totalEntries === 0) {
 			$usersPermissions = Craft::$app->userPermissions->getPermissionsByUserId($userId);
 			$usersPermissions = array_filter($usersPermissions, function($permission) {
-				return $permission !== "accessplugin-isolate";
+				return $permission !== "accessplugin-isolate-assets";
 			});
 			Craft::$app->userPermissions->saveUserPermissions($userId, $usersPermissions);
 		}
