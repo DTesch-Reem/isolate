@@ -230,21 +230,24 @@ class IsolateService extends Component
             $record->save();
         }
 
+        //Isolate Berechtigungen benötigen wir nicht, da der Menüpunkt ausgeblendet ist
         // Get the total number of entries a user now has access to
-        $totalEntries = (int) IsolateRecord::find(["userId" => $userId])->count();
+        //$totalEntries = (int) IsolateRecord::find(["userId" => $userId])->count();
 
         /**
          * If a user has been assigned permissions, enable Isolate automatically to make the workflow contained in one place
          */
+        /* Isolate Berechtigungen benötigen wir nicht, da der Menüpunkt ausgeblendet ist
         if ($totalEntries > 0) {
             $usersPermissions = Craft::$app->userPermissions->getPermissionsByUserId($userId);
             $usersPermissions[] = "accessplugin-isolate";
             Craft::$app->userPermissions->saveUserPermissions($userId, $usersPermissions);
         }
-
+        */
         /**
          * If a user has no assigned permissions disable their access to Isolate
          */
+        /* Isolate Berechtigungen benötigen wir nicht, da der Menüpunkt ausgeblendet ist
         if ($totalEntries === 0) {
             $usersPermissions = Craft::$app->userPermissions->getPermissionsByUserId($userId);
             $usersPermissions = array_filter($usersPermissions, function($permission) {
@@ -252,6 +255,7 @@ class IsolateService extends Component
             });
             Craft::$app->userPermissions->saveUserPermissions($userId, $usersPermissions);
         }
+        */
     }
 
     /**
@@ -509,21 +513,24 @@ class IsolateService extends Component
 			$record->save();
 		}
 		
+        //Isolate Berechtigungen benötigen wir nicht, da der Menüpunkt ausgeblendet ist
 		// Get the total number of entries a user now has access to
-		$totalEntries = (int) IsolateAssetRecord::find(["userId" => $userId])->count();
+		//$totalEntries = (int) IsolateAssetRecord::find(["userId" => $userId])->count();
 		
 		/**
 		 * If a user has been assigned permissions, enable Isolate automatically to make the workflow contained in one place
 		 */
+        /* Isolate Berechtigungen benötigen wir nicht, da der Menüpunkt ausgeblendet ist
 		if ($totalEntries > 0) {
 			$usersPermissions = Craft::$app->userPermissions->getPermissionsByUserId($userId);
 			$usersPermissions[] = "accessplugin-isolate-assets";
 			Craft::$app->userPermissions->saveUserPermissions($userId, $usersPermissions);
 		}
-		
+		*/
 		/**
 		 * If a user has no assigned permissions disable their access to Isolate
 		 */
+        /* Isolate Berechtigungen benötigen wir nicht, da der Menüpunkt ausgeblendet ist
 		if ($totalEntries === 0) {
 			$usersPermissions = Craft::$app->userPermissions->getPermissionsByUserId($userId);
 			$usersPermissions = array_filter($usersPermissions, function($permission) {
@@ -531,6 +538,7 @@ class IsolateService extends Component
 			});
 			Craft::$app->userPermissions->saveUserPermissions($userId, $usersPermissions);
 		}
+        */
 	}
 	
 	/**
